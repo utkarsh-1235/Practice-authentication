@@ -16,7 +16,7 @@ const signup = async(req, res, next)=>{
    if(!name || !email || !password || !confirmPassword){
       return res.status(400).json({
          success: false,
-         message: "Every fields are required"
+         message: 'Every fields are required'
       })
    }
     
@@ -34,7 +34,7 @@ const signup = async(req, res, next)=>{
         if(password !== confirmPassword){
            return res.status(400).json({
              success: false,
-             message: "password and confirm password not match ❌"
+             message: 'password and confirm password not match ❌'
            })
         }
      
@@ -54,7 +54,7 @@ const signup = async(req, res, next)=>{
         if(err.code === 11000){
             return res.status(400).json({
                 success: false,
-                message: "user with this account already exists 😒"
+                message: 'user with this account already exists 😒'
             })
         }
 
@@ -64,4 +64,38 @@ const signup = async(req, res, next)=>{
     }
 }
 
-module.exports = {signup};
+/******************************************************
+ * @SIGNIN
+ * @route /api/auth/signin
+ * @method POST
+ * @description verify user and send cookie with jwt token
+ * @body email , password
+ * @returns User Object , cookie
+ ******************************************************/
+
+const signin = async (req, res, next)=>{
+     const {email, password} = req.body;
+
+     if(!email || !password){
+        return res.status(200).json({
+            success: false,
+            message: 'email and password are required'
+        })
+     }
+
+     const user = await userModel.
+     findOne({email})
+     .select('+password')
+
+     if(!user || !(await bcrypt.compare(password, user.password))){
+        return res.status(400).json({
+            success: true,
+            message: 'invalid credential'
+        })
+     }
+
+}
+
+module.exports = {signup,
+                  signin,
+                  };
