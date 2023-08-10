@@ -1,5 +1,7 @@
-const userModel = require('../Model/userSchema.js')
-const emailvalidator = require('email-validator')
+const userModel = require('../Model/userSchema.js');
+const emailvalidator = require('email-validator');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 /******************************************************
  * @SIGNUP
@@ -83,19 +85,74 @@ const signin = async (req, res, next)=>{
         })
      }
 
-     const user = await userModel.
-     findOne({email})
-     .select('+password')
+     try{
 
-     if(!user || !(await bcrypt.compare(password, user.password))){
+         const user = await userModel
+         .findOne({
+            email
+        })
+         .select('+password')
+    
+         if(!user || !(await bcrypt.compare(password,))){
+            console.log(user)
+            return res.status(400).json({
+                success: false,
+                message: 'invalid credential'
+           })
+         }
+    
+         // create json webtoken
+    const token = user.jwtToken();
+    user.password = undefined;
+    //console.log(token);
+    const cookieOption = {
+        maxAge: 24*60*60*1000, //24h
+        httpOnly: true //  not able to modify  the cookie in client side
+    }     
+    
+    console.log(user)
+    res.cookie('token',token, cookieOption);
+    
+    res.status(200).json({
+        success: true,
+        data: user
+    })
+     }
+     catch(err){
         return res.status(400).json({
-            success: true,
-            message: 'invalid credential'
+            success: false,
+            message: err.message
         })
      }
+}
+
+/******************************************************
+ * @GETUSER
+ * @route /api/auth/user
+ * @method GET
+ * @description retrieve user data from mongoDb if user is valid(jwt auth)
+ * @returns User Object
+ ******************************************************/
+const login = async(req, res, next)=>{
+    const userId = req.user.id;
+try{
+    const user = await userModel.findById(userId);
+    return res.send(200).json({
+        success: true,
+        data: user
+    })
 
 }
+catch(err){
+    return res.send(400).json({
+        success: false,
+        message: err.message
+    })
+}
+    }
+
 
 module.exports = {signup,
                   signin,
+                  login
                   };
