@@ -110,7 +110,7 @@ const signin = async (req, res, next)=>{
         httpOnly: true //  not able to modify  the cookie in client side
     }     
     
-    console.log(user)
+    console.log(user);
     res.cookie('token',token, cookieOption);
     
     res.status(200).json({
@@ -151,8 +151,67 @@ catch(err){
 }
     }
 
+    /******************************************************
+ * @LOGOUT
+ * @route /api/auth/logout
+ * @method GET
+ * @description Remove the token form  cookie
+ * @returns logout message and cookie without token
+ ******************************************************/
 
-module.exports = {signup,
-                  signin,
-                  login
-                  };
+const logout = async (req, res, next) => {
+  try {
+    const cookieOption = {
+      expires: new Date(), // current expiry date
+      httpOnly: true //  not able to modify  the cookie in client side
+    };
+
+    // return response with cookie without token
+    res.cookie("token", null, cookieOption);
+    res.status(200).json({
+      success: true,
+      message: "Logged Out"
+    });
+  } catch (error) {
+    res.stats(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/******************************************************
+ * @GETUSER
+ * @route /api/auth/user
+ * @method GET
+ * @description retrieve user data from mongoDb if user is valid(jwt auth)
+ * @returns User Object
+ ******************************************************/
+
+const getUser = async (req, res, next) => {
+  const userId = req.user.id;
+  try {
+    const user = await userModel.findById(userId);
+    return res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+module.exports = {
+  signup,
+  signin,
+  forgotPassword,
+  login,
+  resetPassword,
+  logout
+};
+
+
+
